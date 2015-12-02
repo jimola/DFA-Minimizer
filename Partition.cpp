@@ -60,6 +60,3 @@ int Partition::split(int s){
 bool Partition::no_marks(int s){
 	return mid[s] == first[s];
 }
-int main(){
-	return 0;
-}
