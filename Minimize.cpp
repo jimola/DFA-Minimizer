@@ -1,6 +1,17 @@
-#include <DFA.h>
+#include "DFA.h"
+#include "Partition.h"
 
-typedef vector<int> parition;
+//This is the implementation of Hopcroft's algorithm.
 DFA Hopcroft(const DFA &in){
-	vector<partition &> P();
+		
+}
+
+//This is the implementation of Valmari-Lehtinen
+DFA ValmariLehtinen(const DFA &in){
+
+}
+
+int main(){
+
+	return 0;
 }

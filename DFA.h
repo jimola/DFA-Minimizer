@@ -1,5 +1,6 @@
 #include <vector>
 
+//This is my representation of a DFA. It also includes some functions that will generate DFAs automatically.
 typedef pair<int, int> transition;
 class DFA{
 public:
