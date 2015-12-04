@@ -33,4 +33,7 @@ public:
 
 	//returns whether any of the elements have been marked
 	bool no_marks(int s);
+
+	//returns the number of sets in P
+	int num_sets();
 };

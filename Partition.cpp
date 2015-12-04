@@ -26,7 +26,7 @@ int Partition::get_first(int s){
 }
 int Partition::get_next(int e){
 	if(locs[e] +1 >= end[sidx[e]]) // then this is the last element in its set
-		return 0;
+		return -1;
 	else return elems[locs[e]+1];
 }
 void Partition::mark(int e){
@@ -59,4 +59,7 @@ int Partition::split(int s){
 }
 bool Partition::no_marks(int s){
 	return mid[s] == first[s];
+}
+int Partition::num_sets(){
+	return sets;
 }
