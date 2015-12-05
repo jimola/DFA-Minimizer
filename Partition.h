@@ -28,7 +28,8 @@ public:
 	//marks an element to be split
 	void mark(int e);
 
-	//if none or all of the elements of the set have been split, then do nothing. Otherwise, split the set into two new sets, split and not-split. At the end, unmark everything
+	//if none or all of the elements of the set have been split, then do nothing. Otherwise, split the set into two new sets, split and not-split.
+	// The split elements must be moved to the new set with the largest index!
 	int split(int s);
 
 	//returns whether any of the elements have been marked

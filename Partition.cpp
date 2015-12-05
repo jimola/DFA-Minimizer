@@ -48,6 +48,7 @@ int Partition::split(int s){
 	if(mid[s] == first[s]) // then nothing is marked
 		return 0;
 	sets++;
+	//move the marked elements to the last set
 	first.push_back(first[s]);
 	mid.push_back(first[s]);
 	end.push_back(mid[s]);
