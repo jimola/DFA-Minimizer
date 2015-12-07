@@ -1,9 +1,9 @@
 #include "DFA.h"
 
-DFA::DFA(int num_states, int alph_size, int start_index, std::vector<bool> finals, std::vector<std::unordered_map<int, int> > trans){
+DFA::DFA(int num_states, int alph, int start_index, std::vector<bool> finals, std::vector<std::unordered_map<int, int> > trans){
 	transitions = trans;
 	Q = num_states;
-	alph_size = alph_size;
+	alph_size = alph;
 	q0 = start_index;
 	final = finals;
 	prev = std::vector<std::unordered_map<int, std::vector<int> > > (Q, std::unordered_map<int, std::vector<int> > (0));
@@ -23,26 +23,26 @@ DFA::DFA(int num_states, int alph_size, int start_index, std::vector<bool> final
 		}
 	}
 }
-int DFA::num_states() const{
+int DFA::num_states(){
 	return Q;
 }
-bool DFA::is_final(int state) const{
+bool DFA::is_final(int state){
 	return final[state];
 }
-int DFA::get_start() const{
+int DFA::get_start(){
 	return q0;
 }
-int DFA::alphabet_size() const{
+int DFA::alphabet_size(){
 	return alph_size;
 }
-int DFA::get_next(int state, int letter) const{
+int DFA::get_next(int state, int letter){
 	auto t = transitions[state].find(letter);
 	if(t != transitions[state].end()){
 		return t->second;
 	}else
 		return -1;
 }
-std::vector<int> DFA::get_prev_states(int state, int letter) const{
+std::vector<int> DFA::get_prev_states(int state, int letter){
 	auto t = prev[state].find(letter);
 	if(t != prev[state].end())
 		return t->second;

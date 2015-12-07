@@ -37,4 +37,7 @@ public:
 
 	//returns the number of sets in P
 	int num_sets();
+
+	//for testing purposes
+	void print();
 };

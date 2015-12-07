@@ -1,5 +1,5 @@
 #include "Partition.h"
-
+#include <stdio.h>
 Partition::Partition(int m){
 	sets = 1;
 	max = m;
@@ -47,7 +47,6 @@ int Partition::split(int s){
 		mid[s] = first[s];
 	if(mid[s] == first[s]) // then nothing is marked
 		return 0;
-	sets++;
 	//move the marked elements to the last set
 	first.push_back(first[s]);
 	mid.push_back(first[s]);
@@ -56,6 +55,7 @@ int Partition::split(int s){
 	for(int i = first[sets]; i<end[sets]; i++){
 		sidx[elems[i]] = sets;
 	}
+	sets++;
 	return sets;
 }
 bool Partition::no_marks(int s){
@@ -63,4 +63,13 @@ bool Partition::no_marks(int s){
 }
 int Partition::num_sets(){
 	return sets;
+}
+void Partition::print(){
+	printf("The sets look like:\n");
+	for(int i = 0; i<num_sets(); i++){
+		printf("(");
+		for(int j = get_first(i); j!=-1; j = get_next(j))
+			printf("%d ", j);
+		printf(")\n");
+	}
 }

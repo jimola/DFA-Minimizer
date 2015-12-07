@@ -1,7 +1,7 @@
 #include <vector>
 #include <unordered_map>
 #include <stdio.h>
-//This is my representation of a DFA. It can also be a partial DFA
+//This is my representation of a DFA. It uses unordered maps so it can also be a partial DFA
 class DFA{
 	//number of states
 	int Q;
@@ -17,11 +17,17 @@ class DFA{
 	std::vector<std::unordered_map<int, std::vector<int> > > prev;
 public:
 	DFA(int num_states, int alph_size, int start_index, std::vector<bool> finals, std::vector<std::unordered_map<int, int> > trans);
-	int num_states() const;
-	bool is_final(int state) const;
-	int get_start() const;
-	int alphabet_size() const;
-	int get_next(int state, int letter) const;
-	std::vector<int> get_prev_states(int state, int letter) const;
+	//returns the number of states
+	int num_states();
+	//returns whether a given state is final
+	bool is_final(int state);
+	//returns the starting state
+	int get_start();
+	//returns the alphabet size
+	int alphabet_size();
+	//returns the next state
+	int get_next(int state, int letter);
+	//returns the states that map to the given state under a certain letter
+	std::vector<int> get_prev_states(int state, int letter);
 	void print_DFA();
 };
