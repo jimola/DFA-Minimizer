@@ -6,22 +6,6 @@ DFA::DFA(int num_states, int alph, int start_index, std::vector<bool> finals, st
 	alph_size = alph;
 	q0 = start_index;
 	final = finals;
-	prev = std::vector<std::unordered_map<int, std::vector<int> > > (Q, std::unordered_map<int, std::vector<int> > (0));
-	for(int i = 0; i<trans.size(); i++){
-		for(int j = 0; j<alph_size; j++){
-			auto t = trans[i].find(j);
-			if(t != trans[i].end()){
-				//then there exists a transition from state i to t->second under letter j
-				auto x = prev[t->second].find(j);
-				if(x != prev[t->second].end()){
-					//then an entry for letter j already exists
-					x->second.push_back(i);
-				}else{
-					prev[t->second].insert({j, std::vector<int> (1, i)});
-				}
-			}
-		}
-	}
 }
 int DFA::num_states(){
 	return Q;
@@ -41,13 +25,6 @@ int DFA::get_next(int state, int letter){
 		return t->second;
 	}else
 		return -1;
-}
-std::vector<int> DFA::get_prev_states(int state, int letter){
-	auto t = prev[state].find(letter);
-	if(t != prev[state].end())
-		return t->second;
-	else
-		return std::vector<int> (0);
 }
 void DFA::print_DFA(){
 	printf("There are %d states\n", Q);

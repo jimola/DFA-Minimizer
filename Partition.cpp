@@ -56,7 +56,7 @@ int Partition::split(int s){
 		sidx[elems[i]] = sets;
 	}
 	sets++;
-	return sets;
+	return end.back() - first.back();
 }
 bool Partition::no_marks(int s){
 	return mid[s] == first[s];

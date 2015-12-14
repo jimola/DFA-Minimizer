@@ -1,6 +1,6 @@
 #include "DFAFactory.h"
 #include <math.h>
-DFA *DFAFactory::endsIn01_inefficient(){
+DFA DFAFactory::endsIn01_inefficient(){
 	int num_states = 6;
 	int alph_size = 2;
 	int start_index = 0;
@@ -13,10 +13,10 @@ DFA *DFAFactory::endsIn01_inefficient(){
 	trans[3] = {{0, 4}, {1, 3}};
 	trans[4] = {{0, 4}, {1, 2}};
 	trans[5] = {{0, 5}, {1, 2}};
-	return new DFA(num_states, alph_size, start_index, finals, trans);
+	return DFA(num_states, alph_size, start_index, finals, trans);
 }
 
-DFA *DFAFactory::exponential_DFA(int n, int alph_size){
+DFA DFAFactory::exponential_DFA(int n, int alph_size){
 	int num_states = 1;
 	std::vector<std::unordered_map<int, int> > trans (0);
 	for(int i = 0; i<n; i++){
@@ -38,5 +38,5 @@ DFA *DFAFactory::exponential_DFA(int n, int alph_size){
 	num_states++;
 	std::vector<bool> finals(num_states, 0);
 	finals[num_states-2] = 1;
-	return new DFA(num_states, alph_size, 0, finals, trans);
+	return DFA(num_states, alph_size, 0, finals, trans);
 }
