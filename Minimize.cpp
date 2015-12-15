@@ -5,35 +5,37 @@
 #include <utility>
 #include "Valmari.cpp"
 //converts a partition into a DFA. Both algorithms use this method
-DFA complete(DFA &in, Partition &P){
+DFA *complete(const DFA *in, Partition &P){
 	int num_states = P.num_sets();
-	int alph_size = in.alphabet_size();
-	int start_index = P.get_set(in.get_start());
+	int alph_size = in->alph_size;
+	int start_index = P.get_set(in->q0);
 	std::vector<bool>finals (num_states, 0);
-	for(int i = 0; i<in.num_states(); i++){
-		if(in.is_final(i)){
+	for(int i = 0; i<in->Q; i++){
+		if(in->final[i]){
 			finals[P.get_set(i)] = 1;
 		}
 	}
-	std::vector<std::unordered_map<int, int> > trans (num_states, std::unordered_map<int, int> (0));
-	for(int i = 0; i<num_states; i++){
-		for(int j = 0; j<alph_size; j++){
-			//for each state we connect the state it transitions to under letter j. We only need to look at one because they (better) have the same behavior
-			int elem = P.get_first(i);
-			int mapped_node = in.get_next(elem, j);
-			if(mapped_node != -1)
-				trans[i].insert({j, P.get_set(mapped_node)});
-		}
+	std::vector<int> Tails(num_states*alph_size, 0);
+	std::vector<int> Labels(num_states*alph_size, 0);
+	std::vector<int> Heads(num_states*alph_size, 0);
+	for(int i = 0; i<in->Heads.size(); i++){
+		int t = P.get_set(in->Tails[i]);
+		int l = in->Labels[i];
+		int h = P.get_set(in->Heads[i]);
+		int m = t*alph_size+l;
+		Tails[m] = t;
+		Labels[m] = l;
+		Heads[m] = h;
 	}
-	return DFA(num_states, alph_size, start_index, finals, trans);
+	return new DFA(num_states, alph_size, start_index, finals, Tails, Labels, Heads);
 }
 
 //This is the implementation of Hopcroft's algorithm.
-DFA Hopcroft(DFA &in){
+DFA *Hopcroft(const DFA *in){
 	//The partition of states into like behavior
-	Partition P = Partition(in.num_states());
-	for(int i = 0; i<in.num_states(); i++){
-		if(in.is_final(i)){
+	Partition P = Partition(in->Q);
+	for(int i = 0; i<in->Q; i++){
+		if(in->final[i]){
 			P.mark(i);
 		}
 	}
@@ -43,10 +45,10 @@ DFA Hopcroft(DFA &in){
 	int index = 1;
 	std::vector<bool> schedule_members(2, 0);
 	schedule_members[1] = 1;
-	std::vector<std::vector<std::vector<int> > > prevs (in.num_states(), std::vector<std::vector<int> > (in.alphabet_size(), std::vector<int> (0)));
-	for(int i = 0; i<in.num_states(); i++){
-		for(int j = 0; j<in.alphabet_size(); j++)
-			prevs[in.get_next(i, j)][j].push_back(i);
+	//prevs[i][j] contains the set of nodes that map to i under letter j
+	std::vector<std::vector<std::vector<int> > > prevs (in->Q, std::vector<std::vector<int> > (in->alph_size, std::vector<int> (0)));
+	for(int i = 0; i<in->Heads.size(); i++){
+		prevs[in->Heads[i]][in->Labels[i]].push_back(in->Tails[i]);
 	}
 	while(true){
 		while(index<schedule_members.size() && !schedule_members[index]){
@@ -56,9 +58,9 @@ DFA Hopcroft(DFA &in){
 			break;
 		//now we must have found something that is actually in the schedule
 		schedule_members[index] = 0;
-		for(int i = 0; i<in.alphabet_size(); i++){
+		for(int i = 0; i<in->alph_size; i++){
 			//find the preimage of the partition with the set index under letter i
-			std::vector<bool> prev_map(in.num_states(), 0);
+			std::vector<bool> prev_map(in->Q, 0);
 			//Each node in the previous map is considered only once => O(n) time.
 			for(int pos = P.get_first(index); pos!=-1; pos = P.get_next(pos)){
 				for(int node : prevs[pos][i])
@@ -104,44 +106,27 @@ DFA Hopcroft(DFA &in){
 /*
 //This is my implementation of Valmari-Lehtinen. It isn't quite done because their paper is impossible to understand.
 //Valmari's implementation is in Valmari.cpp
-class Transition{
-	int start;
-	int letter;
-	int end;
-};
-DFA *ValmariLehtinen(DFA *in){
-	vector<Transition *> trans;
-	Partition *P = new Partition(in.num_states());
-	Partition *T = new Partition(trans.size());
+DFA ValmariLehtinen(DFA in){
+	vector<Transition> trans;
+	Partition P = new Partition(in->num_states());
+	Partition T = new Partition(trans.size());
 
-	sort(trans.begin(), trans.end(), 
-		[&](Transition *a, Transition *b){
-			return a->letter < b->letter;
-		}
-	);
+	std::vector<std::vector<std::pair<int, int> > tr(in->alph_size(), std::vector<std::pair<int, int> > (0));
 	//bucket sort trans
-	for(int i = 0; i<in.num_states(); i++){
-		if(in.is_final(i)){
+	for(int i = 0; i<in->num_states(); i++){
+		for(auto x = in->transitions[i].cbegin(); x!=in->transitions[i].cend(); x++){
+			tr[x->first].push_back({i, x->second});
+		}
+	}
+	for(int i = 0; i<in->num_states(); i++){
+		if(in->is_final(i)){
 			P.mark(i);
 		}
 	}
 	//This keeps track of the set indices (of T) that each element of P maps to.
 	vector<vector<int> > indices(P.num_sets(), vector<int> (0));
 	//now, we split T based on letters
-	for(int i = 0; i<in.alphabet_size(); i++){
-		for(int j = T->get_start(0); j >= 0 && trans[j]->letter == i; j = T->get_next(j)){
-			T->mark(j);
-		}
-		T->split(0);
-		//The split elements were just moved to the end
-		int end = T->num_sets()-1;
-		//Now we must split depending on which set of P we are in
-		for(int j = T->get_start(end); j>= 0; j = T->get_next(j)){
-			if(P.get_set(trans[j]->end) == 1)
-				T->mark(j);
-		}
-		T->split(end);
-	}
+	for(std::vector<pair
 	//Now, T has been initialized. We need to initialize indices
 	for(int i = 0; i<T->num_sets(); i++){
 		indices[P.get_set(trans[T->get_start(i)]->end)].push_back(i);
@@ -168,39 +153,46 @@ DFA *ValmariLehtinen(DFA *in){
 	}
 }
 */
-
 int main(){
 	printf("Welcome to the DFA minimizer\nWhich DFA would you like to minimize?\n");
-	while(true){
-		printf("(1) Exponential DFA of L letters accepting only the string 0^n\n");
-
-		int x; scanf("%d", &x);
-		switch(x){
-			case 1:
-			{
-				printf("Enter n and L. (Warning: This DFA has size O(L^n): ");
-				int sz, alpha; scanf("%d %d", &sz, &alpha);
-				DFA x = DFAFactory::exponential_DFA(sz, alpha);
-				printf("Timing begins now\n");
-				auto start = std::chrono::high_resolution_clock::now();
-				DFA y = Hopcroft(x);
-				auto finish = std::chrono::high_resolution_clock::now();
-				printf("Hopcroft took: ");
-				printf("%li ns\n", std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count());
-
-				start = std::chrono::high_resolution_clock::now();
-				y = Valmari(x);
-				finish = std::chrono::high_resolution_clock::now();
-				printf("Valmari took: ");
-				printf("%li ns\n", std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count());
-				break;
-			}
-			default:
-			{
-				printf("Invalid number!\n");
-				break;
-			}
+	DFAFactory df = DFAFactory ();
+	printf("(1) Exponential DFA of L letters accepting only the string 0^n\n");
+	printf("(2) Random DFA of size N with L letters accepting all strings\n");
+	int x; scanf("%d", &x);
+	DFA *d;
+	switch(x){
+		case 1:
+		{
+			printf("Enter L and n. (Warning: This DFA has size O(L^n)): ");
+			int sz, alpha; scanf("%d %d", &alpha, &sz);
+			d = df.exponential_DFA(sz, alpha);
+			break;
+		}
+		case 2:
+		{
+			printf("Enter N and L. (Make L small compared to N): ");
+			int sz, alpha; scanf("%d %d", &sz, &alpha);
+		}
+		default:
+		{
+			printf("Invalid number!\n");
+			return 0;
 		}
 	}
+	d->print_DFA();
+	printf("Timing begins now\n");
+	auto start = std::chrono::high_resolution_clock::now();
+	DFA *y = Hopcroft(d);
+	auto finish = std::chrono::high_resolution_clock::now();
+	printf("Hopcroft took: ");
+	printf("%li ms\n", std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count() / 1000000);
+
+	d->print_DFA();
+	start = std::chrono::high_resolution_clock::now();
+	DFA *z = Valmari(d);
+	finish = std::chrono::high_resolution_clock::now();
+	printf("Valmari took: ");
+	printf("%li ms\n", std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count() / 1000000);
+	delete(d);
 	return 0;
 }

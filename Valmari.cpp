@@ -93,17 +93,15 @@ void rem_unreachable( std::vector<int> &T, std::vector<int> &H ){
 }
 
 /* Main program */
-DFA Valmari(DFA &in){
+DFA *Valmari(const DFA *in){
 
 	/* Read sizes and reserve most memory\*/
-	nn = in.num_states();
-	std::vector<std::vector<std::pair<int, int> > > labels(in.alphabet_size(), std::vector<std::pair<int, int> > (0));
-	for(int i = 0; i<nn; i++){
-		for(auto x = in.transitions[i].cbegin(); x!=in.transitions[i].cend(); x++){
-			labels[x->first].push_back({i, x->second});
-		}
+	nn = in->Q;
+	std::vector<std::vector<std::pair<int, int> > > labels(in->alph_size, std::vector<std::pair<int, int> > (0));
+	for(int i = 0; i<in->Heads.size(); i++){
+		labels[in->Labels[i]].push_back({in->Tails[i], in->Heads[i]});
 	}
-	for(int i = 0; i<in.alphabet_size(); i++){
+	for(int i = 0; i<in->alph_size; i++){
 		for(std::pair<int, int> x : labels[i]){
 			T.push_back(x.first);
 			L.push_back(i);
@@ -111,10 +109,10 @@ DFA Valmari(DFA &in){
 		}
 	}
 	mm = H.size();
-	q0 = in.get_start();
+	q0 = in->q0;
 	std::vector<int> fi;
-	for(int i = 0; i<in.num_states(); i++)
-		if(in.is_final(i))
+	for(int i = 0; i<in->Q; i++)
+		if(in->final[i])
 			fi.push_back(i);
 	ff = fi.size();
 	B.init( nn );
@@ -174,10 +172,14 @@ DFA Valmari(DFA &in){
 	int num_states = B.z;
 	int start_index = B.S[q0];
 	std::vector<bool> finals (num_states, 0);
-	std::vector<std::unordered_map<int, int> > trans (num_states, std::unordered_map<int, int> (0));
+	std::vector<int> Tails;
+	std::vector<int> Labels;
+	std::vector<int> Heads;
 	for( int t = 0; t < mm; ++t ){
 		if( B.L[T[t]] == B.F[B.S[T[t]]] ){
-			trans[B.S[T[t]]].insert({L[t], B.S[H[t]]});
+			Tails.push_back(B.S[T[t]]);
+			Labels.push_back(L[t]);
+			Heads.push_back(B.S[H[t]]);
 		}
 	}
 
@@ -187,6 +189,6 @@ DFA Valmari(DFA &in){
 		}
 	}
 
-	return DFA(num_states, in.alphabet_size(), start_index, finals, trans);
+	return new DFA(num_states, in->alph_size, start_index, finals, Tails, Labels, Heads);
 
 }
