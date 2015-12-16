@@ -13,6 +13,6 @@ public:
 	DFA *exponential_DFA(int n, int alph_size);
 	//generates a random DFA (except on one alphabet track, to make sure the DFA is connected)
 	DFA *random(int n, int alph_size);
-	//generates an inefficient DFA that accepts the language 0*1*0*1*...(repeating n times)
+	//generates a minimal DFA that accepts the language 0^{<n}1^{<n}0^{<n}1^{<n}...(repeating n times)
 	DFA *repeating_01(int n);
 };

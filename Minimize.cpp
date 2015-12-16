@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <chrono>
 #include <utility>
+#include <unordered_set>
 #include "Valmari.cpp"
 //converts a partition into a DFA. Both algorithms use this method
 DFA *complete(const DFA *in, Partition &P){
@@ -40,62 +41,45 @@ DFA *Hopcroft(const DFA *in){
 		}
 	}
 	P.split(0);
-	//The schedule contains the set of partitions that might need further splitting. We only need to add half of these partitions due to a lemma by Hopcroft
-	//schedule_members tells us whether a specific index is actually in the schedule. Index tells us where to start looking for the next schedule member; it only increases.
-	int index = 1;
-	std::vector<bool> schedule_members(2, 0);
-	schedule_members[1] = 1;
+	//The schedule contains the set of partition indices that might need further splitting. We only need to add half of these partitions due to a lemma by Hopcroft
+	std::unordered_set<int> schedule;
+	schedule.insert(1);
 	//prevs[i][j] contains the set of nodes that map to i under letter j
 	std::vector<std::vector<std::vector<int> > > prevs (in->Q, std::vector<std::vector<int> > (in->alph_size, std::vector<int> (0)));
 	for(int i = 0; i<in->Heads.size(); i++){
 		prevs[in->Heads[i]][in->Labels[i]].push_back(in->Tails[i]);
 	}
-	int count = 0;
-	while(true){
-		while(index<schedule_members.size() && !schedule_members[index]){
-			index++;
-		}
-		if(index == schedule_members.size())
-			break;
+	while(!schedule.empty()){
+		int index = *(schedule.cbegin());
+		schedule.erase(index);
 		//now we must have found something that is actually in the schedule
-		schedule_members[index] = 0;
+		//This needs to take O(a) time!
+		std::vector<int> examine;	
 		for(int i = 0; i<in->alph_size; i++){
 			//find the preimage of the partition with the set index under letter i
 			std::vector<bool> prev_map(in->Q, 0);
 			//Each node in the previous map is considered only once => O(n) time.
 			for(int pos = P.get_first(index); pos!=-1; pos = P.get_next(pos)){
-				for(int node : prevs[pos][i])
-					prev_map[node] = 1;
-			}
-			//iterating through P will never go through more than O(n) states
-			for(int j = 0; j<P.num_sets(); j++){
-				//Now we calculate the parts of prev_map that are in or out of each set of P
-				std::vector<int> in_S;
-				std::vector<int> out_S;
-				for(int pos = P.get_first(j); pos!=-1; pos = P.get_next(pos)){
-					if(prev_map[pos])
-						in_S.push_back(pos);
-					else
-						out_S.push_back(pos);
+				for(int node : prevs[pos][i]){
+					//prev_map[node] = 1;
+					P.mark(node);
+					examine.push_back(P.get_set(node));
 				}
-				if(in_S.size() > 0 && out_S.size() > 0){
-					//Then the set j is not fine enough. We need to split this set
-					if(in_S.size() < out_S.size()){
-						for(int elem : in_S)
-							P.mark(elem);
-						P.split(j);
-						// Now out is at the last index and in is at index j
-						// we check if the partition at index j is in the schedule. If it is, then both in and out must be added.
-						// If it isn't, then the out must be marked. Both cases simplify to simply marking out as marked
-						// otherwise, 
-						schedule_members.push_back(1);
-					}else{
-						//the other case
-						for(int elem : out_S){
-							P.mark(elem);
+			}
+			for(int x : examine){
+				int sz = P.get_size(x);
+				int sz_1 = P.split(x); // the size of the elements that were just split to the back
+				if(sz_1 > 0){
+					if(schedule.find(x) == schedule.end())
+						if(sz_1 <= sz/2){
+							//then the last set is the one we should add to the schedule
+							schedule.insert(P.num_sets()-1);
+						}else{
+							schedule.insert(x);
 						}
-						P.split(j);
-						schedule_members.push_back(1);
+					else{
+						//add both 
+						schedule.insert(P.num_sets()-1);
 					}
 				}
 			}
@@ -161,7 +145,7 @@ int main(){
 	printf("(2) Exponential DFA of L letters accepting all strings longer than length n\n");
 	printf("(3) Exponential DFA of L letters accepting random strings with length less than or equal to n\n");
 	printf("(4) A mostly random DFA of L letters and Q states\n");
-	printf("(5) A DFA that accepts the language 0*1*0*1*... (n times)\n");
+	printf("(5) A DFA that accepts the language 0^{<n=}1^{<=n}0^{<=n}... (n times) (This is a minimal DFA)\n");
 	printf("(6) A small DFA that accepts all strings ending in 01 (for correctness testing)\n");
 	int x; scanf("%d", &x);
 	DFA *d;
@@ -228,11 +212,15 @@ int main(){
 	finish = std::chrono::high_resolution_clock::now();
 	printf("Valmari-Lehtinen took: ");
 	printf("%li ms\n", std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count() / 1000000);
-	printf("Print the DFAs? (Enter a Boolean. Warning: They could be huge): ");
-	int p; scanf("%d", &p); 
+	printf("Print the input DFA? (Enter a Boolean. Warning: it could be huge): ");
+	int p; scanf("%d", &p);
 	if(p){
 		printf("Input DFA:\n");
 		d->print_DFA();
+	}
+	printf("Print the output DFA? (Enter a Boolean. Warning: They could be huge): ");
+	scanf("%d", &p); 
+	if(p){
 		printf("Hopcroft DFA:\n");
 		y->print_DFA();
 		printf("Valmari-Lehtinen DFA:\n");

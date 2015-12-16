@@ -29,6 +29,7 @@ public:
 	void mark(int e);
 
 	//if none or all of the elements of the set have been split, then do nothing. Otherwise, split the set into two new sets, split and not-split.
+	//return the size of the new created set
 	// The split elements must be moved to the new set with the largest index!
 	int split(int s);
 

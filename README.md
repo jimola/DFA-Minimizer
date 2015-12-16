@@ -13,6 +13,10 @@ Valmari's code is available at http://www.cs.tut.fi/~ava/DFA_minimizer.cc
 
 Because of this problem, there is less uniformity between the implementations of Hopcroft and Valmari-Lehtinen than I would have liked.
 I would have liked both implementations to use my Partition.cpp and the function called complete in Minimize.cpp
-I still made an effort to make them uniform. Both implementations exclusively use the stack, vectors, and copy the DFA transitions at most once. I do think that my implementation of Hopcroft is slightly less memory-efficient than Valmari's implementation of his algorithm.
+I still made an effort to make them uniform. Both implementations exclusively use the stack, vectors, and copy the DFA transitions at most once.
+I do think that my implementation of Hopcroft is less memory-efficient than Valmari's implementation of his algorithm.
 
-However, not all of the discrepancy is my fault; Valmari-Lehtinen is a more efficient algorithm because it works on a partial DFA. Before running his algorithm, Valmari deletes states through which an accepting string could never pass (like the garbage state that is required in a partial DFA into a complete DFA). To see this, run "(1) Exponential DFA of L letters accepting only the string 0^n" and note the time difference; Valmari reduces the DFA to 
+It looks like Valmari is anywhere from 1.25 to 4 times faster than Hopcroft. On the DFAs with lots of order, the factor is low, around 1.25, which I believe is caused by inferior implementation.
+On DFAs with lots of randomness or DFAs that are already almost-minimal, the factor increases to around 4. I believe this is because Valmari-Lehtinen is just a more efficient algorithm.
+
+For bugs or comments or other things, feel free to contact me, Jacob Imola, at jimola@andrew.cmu.edu. Thanks.

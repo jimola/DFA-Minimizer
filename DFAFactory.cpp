@@ -1,5 +1,5 @@
 #include "DFAFactory.h"
-#include <math.h>
+typedef long long ll;
 DFA *DFAFactory::endsIn01_inefficient(){
 	int num_states = 6;
 	int alph_size = 2;
@@ -13,28 +13,30 @@ DFA *DFAFactory::endsIn01_inefficient(){
 }
 
 DFA *DFAFactory::exponential_DFA(int n, int alph_size){
-	int num_states = 1;
+	ll num_states = 0;
+	ll layer = 1;
 	std::vector<int> Tails;
 	std::vector<int> Labels;
 	std::vector<int> Heads;
 	for(int i = 0; i<n; i++){
-		for(int j = 0; j<pow(alph_size, i); j++){
+		for(int j = 0; j<layer; j++){
 			for(int k = 0; k<alph_size; k++){
-				Tails.push_back(i);
+				Tails.push_back(num_states+j);
 				Labels.push_back(k);
-				Heads.push_back(num_states+j*alph_size+k);
+				Heads.push_back(num_states+layer+j*alph_size+k);
 			}
 		}
-		num_states+=pow(alph_size, i+1);
+		num_states += layer;
+		layer *= alph_size;
 	}
-	for(int i = 0; i<=pow(alph_size, n); i++){
+	for(int i = 0; i<=layer; i++){
 		for(int k = 0; k<alph_size; k++){
-			Tails.push_back(i);
+			Tails.push_back(num_states+i);
 			Labels.push_back(k);
-			Heads.push_back(num_states);
+			Heads.push_back(num_states+layer);
 		}
 	}
-	num_states++;
+	num_states += layer+1;
 	std::vector<bool> finals(num_states, 0);
 	return new DFA(num_states, alph_size, 0, finals, Tails, Labels, Heads);
 }
