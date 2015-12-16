@@ -20,7 +20,7 @@ void DFA::print_DFA(){
 	printf("\nThe alphabet size is %d\n", alph_size);
 	printf("The transitions are:\n");
 	for(int i = 0; i<Heads.size(); i++){
-		printf("(%d %d %d)\n", Tails[i], Labels[i], Heads[i]);
+		printf("%d %d %d\n", Tails[i], Labels[i], Heads[i]);
 	}
 	printf("\n");
 }

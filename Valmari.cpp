@@ -182,7 +182,7 @@ DFA *Valmari(const DFA *in){
 			Heads.push_back(B.S[H[t]]);
 		}
 	}
-
+	
 	for( int b = 0; b < B.z; ++b ){
 		if( B.F[b] < ff ){
 			finals[b] = 1;

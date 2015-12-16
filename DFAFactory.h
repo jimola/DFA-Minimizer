@@ -9,6 +9,10 @@ public:
 	}
 	//generates a small DFA that accepts strings ending in 01. One can check that it is equivalent
 	DFA *endsIn01_inefficient();
-	//generates an exponential (in n) DFA that accepts only a string of n 0s.
+	//generates an exponential (in n) DFA with a tree-like structure.
 	DFA *exponential_DFA(int n, int alph_size);
+	//generates a random DFA (except on one alphabet track, to make sure the DFA is connected)
+	DFA *random(int n, int alph_size);
+	//generates an inefficient DFA that accepts the language 0*1*0*1*...(repeating n times)
+	DFA *repeating_01(int n);
 };

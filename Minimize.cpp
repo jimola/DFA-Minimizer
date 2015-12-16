@@ -50,6 +50,7 @@ DFA *Hopcroft(const DFA *in){
 	for(int i = 0; i<in->Heads.size(); i++){
 		prevs[in->Heads[i]][in->Labels[i]].push_back(in->Tails[i]);
 	}
+	int count = 0;
 	while(true){
 		while(index<schedule_members.size() && !schedule_members[index]){
 			index++;
@@ -157,7 +158,11 @@ int main(){
 	printf("Welcome to the DFA minimizer\nWhich DFA would you like to minimize?\n");
 	DFAFactory df = DFAFactory ();
 	printf("(1) Exponential DFA of L letters accepting only the string 0^n\n");
-	printf("(2) Random DFA of size N with L letters accepting all strings\n");
+	printf("(2) Exponential DFA of L letters accepting all strings longer than length n\n");
+	printf("(3) Exponential DFA of L letters accepting random strings with length less than or equal to n\n");
+	printf("(4) A mostly random DFA of L letters and Q states\n");
+	printf("(5) A DFA that accepts the language 0*1*0*1*... (n times)\n");
+	printf("(6) A small DFA that accepts all strings ending in 01 (for correctness testing)\n");
 	int x; scanf("%d", &x);
 	DFA *d;
 	switch(x){
@@ -166,12 +171,45 @@ int main(){
 			printf("Enter L and n. (Warning: This DFA has size O(L^n)): ");
 			int sz, alpha; scanf("%d %d", &alpha, &sz);
 			d = df.exponential_DFA(sz, alpha);
+			d->final[d->Q-2] = 1;
 			break;
 		}
 		case 2:
 		{
-			printf("Enter N and L. (Make L small compared to N): ");
-			int sz, alpha; scanf("%d %d", &sz, &alpha);
+			printf("Enter L and n. (Warning: This DFA has size O(L^n)): ");
+			int sz, alpha; scanf("%d %d", &alpha, &sz);
+			d = df.exponential_DFA(sz, alpha);
+			d->final[d->Q-1] = 1;
+			break;
+		}
+		case 3:
+		{	
+			printf("Enter L and n. (Warning: This DFA has size O(L^n)): ");
+			int sz, alpha; scanf("%d %d", &alpha, &sz);
+			d = df.exponential_DFA(sz, alpha);
+			for(int i = 0; i<d->Q-1; i++){
+				d->final[i] = rand() % 2;
+			}
+			break;
+		}
+		case 4:
+		{
+			printf("Enter L and Q: ");
+			int Q, alpha; scanf("%d %d", &alpha, &Q);
+			d = df.random(Q, alpha);
+			break;
+		}
+		case 5:
+		{
+			printf("Enter n: (This DFA has size O(n^2)): ");
+			int n; scanf("%d", &n);
+			d = df.repeating_01(n);
+			break;
+		}
+		case 6:
+		{
+			d = df.endsIn01_inefficient();
+			break;
 		}
 		default:
 		{
@@ -179,20 +217,29 @@ int main(){
 			return 0;
 		}
 	}
-	d->print_DFA();
 	printf("Timing begins now\n");
 	auto start = std::chrono::high_resolution_clock::now();
 	DFA *y = Hopcroft(d);
 	auto finish = std::chrono::high_resolution_clock::now();
 	printf("Hopcroft took: ");
 	printf("%li ms\n", std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count() / 1000000);
-
-	d->print_DFA();
 	start = std::chrono::high_resolution_clock::now();
 	DFA *z = Valmari(d);
 	finish = std::chrono::high_resolution_clock::now();
-	printf("Valmari took: ");
+	printf("Valmari-Lehtinen took: ");
 	printf("%li ms\n", std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count() / 1000000);
+	printf("Print the DFAs? (Enter a Boolean. Warning: They could be huge): ");
+	int p; scanf("%d", &p); 
+	if(p){
+		printf("Input DFA:\n");
+		d->print_DFA();
+		printf("Hopcroft DFA:\n");
+		y->print_DFA();
+		printf("Valmari-Lehtinen DFA:\n");
+		z->print_DFA();
+	}
 	delete(d);
+	delete(y);
+	delete(z);
 	return 0;
 }
